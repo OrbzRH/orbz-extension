@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Orbz</title>
+<link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img src="icons/32.png" alt="" width="22" height="22" /><span>Orbz</span></div>
+  <div class="meter" id="meter" hidden>
+    <span class="bal" id="balance">$0.00</span>
+    <span class="fuse" id="fuse"></span>
+  </div>
+  <button type="button" class="icon" id="gear" aria-label="Settings" title="Settings">⚙</button>
+</header>
+
+<section id="connect" class="card" hidden>
+  <h1>Connect your key</h1>
+  <p>Paste an API key from <a href="https://use.orbz.app/keys" target="_blank" rel="noopener">use.orbz.app/keys</a>. It stays in this browser, and web pages cannot read it.</p>
+  <form id="connectForm">
+    <input id="keyInput" class="input" type="password" placeholder="sk-orbz-…" autocomplete="off" spellcheck="false" required />
+    <details class="adv"><summary>Advanced</summary>
+      <label>API base<input id="baseInput" class="input" type="url" placeholder="https://api.orbz.app/v1" autocomplete="off" spellcheck="false" /></label>
+    </details>
+    <button type="submit" class="btn" id="connectBtn">Connect</button>
+  </form>
+  <p class="err" id="connectErr" hidden></p>
+</section>
+
+<section id="settings" class="card" hidden>
+  <h1>Settings</h1>
+  <dl class="kv">
+    <div><dt>Key</dt><dd id="keyLabel">…</dd></div>
+    <div><dt>Wallet</dt><dd id="walletLabel" class="mono">…</dd></div>
+    <div><dt>Tier</dt><dd id="tierLabel">…</dd></div>
+    <div><dt>Limits</dt><dd id="limitsLabel">…</dd></div>
+  </dl>
+  <div class="row">
+    <button type="button" class="btn ghost" id="refresh">Refresh</button>
+    <button type="button" class="btn ghost" id="clear">Clear chat</button>
+    <button type="button" class="btn ember" id="disconnect">Disconnect</button>
+  </div>
+  <p class="hint">Disconnect removes the key from this browser. To kill the key everywhere, revoke it on the Keys page.</p>
+  <button type="button" class="btn ghost" id="back">Back</button>
+</section>
+
+<main id="chat" hidden>
+  <div class="log" id="log"></div>
+  <form class="ask" id="askForm">
+    <textarea id="ask" class="input" rows="2" placeholder="Ask Orbz Opus… (Enter to send, Shift+Enter for a new line)" maxlength="12000"></textarea>
+    <div class="askRow">
+      <span class="hint" id="costHint">List price, no markup. Every reply shows its cost.</span>
+      <button type="submit" class="btn" id="send">Send</button>
+      <button type="button" class="btn ghost" id="stop" hidden>Stop</button>
+    </div>
+  </form>
+</main>
+
+<footer class="foot">
+  <a href="https://use.orbz.app" target="_blank" rel="noopener">Console</a> · <a href="https://use.orbz.app/receipts" target="_blank" rel="noopener">Receipts</a> · <a href="https://orbz.app/docs" target="_blank" rel="noopener">Docs</a>
+</footer>
+<script type="module" src="sidepanel.js"></script>
+</body>
+</html>
