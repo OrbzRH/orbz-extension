@@ -67,15 +67,40 @@ export async function fetchKey({ key, base }) {
   return res.json();
 }
 
-/**
- * Streams one chat completion. Calls onDelta(text) as it arrives and resolves with
- * { text, finish, cost, balance, usage }. Aborting `signal` stops the stream; what was written is still billed.
- */
-export async function chat({ key, base }, messages, { signal, onDelta, maxTokens = 1024 } = {}) {
-  const res = await fetch(`${base}/chat/completions`, {
+/** A contract address inside any text, or null. */
+export function findAddress(text) {
+  const m = /0x[a-fA-F0-9]{40}/.exec(String(text || ""));
+  return m ? m[0] : null;
+}
+
+/** POST /v1/token/facts: what the chain and the market say about a token. Free; no model involved. */
+export async function tokenFacts({ key, base }, ca) {
+  const res = await fetch(`${base}/token/facts`, {
     method: "POST",
     headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
-    body: JSON.stringify({ model: MODEL, stream: true, max_tokens: maxTokens, messages }),
+    body: JSON.stringify({ ca }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!res.ok) await fail(res);
+  return res.json();
+}
+
+/** Streams one chat completion. Resolves with { text, finish, cost, balance, usage }. */
+export const chat = (s, messages, { signal, onDelta, maxTokens = 1024 } = {}) =>
+  streamPost(s, "/chat/completions", { model: MODEL, stream: true, max_tokens: maxTokens, messages }, { signal, onDelta });
+
+/** Streams Orbz Opus's read of a token (or its answer to a follow-up), paid like a chat completion. */
+export const tokenRead = (s, ca, question = "", { signal, onDelta } = {}) => streamPost(s, "/token/read", { ca, question }, { signal, onDelta });
+
+/**
+ * One streamed POST. Calls onDelta(piece, fullText) as it arrives and resolves with
+ * { text, finish, cost, balance, usage }. Aborting `signal` stops the stream; what was written is still billed.
+ */
+async function streamPost({ key, base }, path, body, { signal, onDelta } = {}) {
+  const res = await fetch(`${base}${path}`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+    body: JSON.stringify(body),
     signal,
   });
   if (!res.ok) await fail(res);

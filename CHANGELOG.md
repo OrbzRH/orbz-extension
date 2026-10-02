@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- Token check: select a contract address and pick **Check this token**, or paste one into the panel.
+- A fact card from the chain and DEX Screener: price, liquidity, 24h volume and trades, pool and age, owner, upgradeable, burned supply. Thin liquidity and young pools are marked.
+- Orbz Opus reads the facts, streamed, with its cost. Facts only, no buy or sell calls. Follow-up questions still know the token.
+- Uses the new `/v1/token/facts` (free) and `/v1/token/read` (paid like a reply) endpoints.
+
 ## 0.1.0
 
 First release.

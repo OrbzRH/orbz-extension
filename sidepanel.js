@@ -1,5 +1,5 @@
 // The side panel: connect a key, chat with Orbz Opus, and act on what the right-click menu handed over.
-import { ApiError, burnsIn, chat, fetchKey, getSettings, setSettings, usd } from "./shared.js";
+import { ApiError, burnsIn, chat, fetchKey, findAddress, getSettings, setSettings, tokenFacts, tokenRead, usd } from "./shared.js";
 
 const $ = (id) => document.getElementById(id);
 const views = { connect: $("connect"), settings: $("settings"), chat: $("chat") };
@@ -117,8 +117,86 @@ function empty() {
   if (log.children.length) return;
   const e = el("div", "empty");
   e.appendChild(el("b", null, "Select text on any page, right-click, Ask Orbz."));
-  e.appendChild(document.createTextNode("Or ask here. Replies are paid from your credit at list price."));
+  e.appendChild(document.createTextNode("Or ask here. Paste a 0x… contract address to check a token. Replies are paid from your credit at list price."));
   log.appendChild(e);
+}
+
+// ── token check ─────────────────────────────────────────────────────────────────────────────────────
+const shortAddr = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+const compact = (v) => (v == null ? "n/a" : v >= 1e6 ? `$${(v / 1e6).toFixed(2)}M` : v >= 1e3 ? `$${(v / 1e3).toFixed(1)}K` : v >= 1 ? `$${v.toFixed(2)}` : `$${Number(v).toPrecision(3)}`);
+
+/** The facts as a small card: what the chain and the market say, risks in ember. */
+function factCard(f) {
+  const card = el("div", "facts");
+  const t = el("div", "t");
+  t.appendChild(el("b", null, `${f.token.name ?? "Unknown"} ($${f.token.symbol ?? "?"})`));
+  const link = el("a", null, shortAddr(f.address));
+  link.href = `https://robin.etherscan.io/token/${f.address}`;
+  link.target = "_blank";
+  link.rel = "noopener";
+  t.appendChild(link);
+  card.appendChild(t);
+  const m = f.market && f.market.top;
+  const c = f.control;
+  const rows = [
+    ["Price", m && m.priceUsd != null ? `$${Number(m.priceUsd).toPrecision(4)}` : "n/a"],
+    ["Liquidity", compact(m ? m.liquidityUsd : null), m && m.liquidityUsd != null && m.liquidityUsd < 10_000],
+    ["Volume 24h", compact(m ? m.volume24h : null)],
+    ["Trades 24h", m && m.buys24h != null ? `${m.buys24h} buys · ${m.sells24h} sells` : "n/a"],
+    ["Pool", m ? `${m.dex} ${m.labels.join(" ")} · ${m.pairAgeHours ?? "?"}h` : f.market && f.market.pairs === 0 ? "no pool" : "n/a", m && m.pairAgeHours != null && m.pairAgeHours < 72],
+    ["Owner", c.owner ? (c.ownerRenounced ? "renounced" : shortAddr(c.owner)) : c.ownerFunction === false ? "no owner function" : "n/a", !!(c.owner && !c.ownerRenounced)],
+    ["Upgradeable", c.upgradeable ? "yes" : c.proxyLike ? "likely a proxy" : c.upgradeable === false ? "no" : "n/a", !!(c.upgradeable || c.proxyLike)],
+    ["Burned", f.supply.burnedPct != null ? `${f.supply.burnedPct}%` : "n/a"],
+  ];
+  const dl = el("dl");
+  for (const [k, v, warn] of rows) {
+    dl.appendChild(el("dt", null, k));
+    dl.appendChild(el("dd", warn ? "warn" : null, v));
+  }
+  card.appendChild(dl);
+  log.appendChild(card);
+  scroll();
+}
+
+/** Facts first (free), then Orbz Opus's read, streamed and paid from credit. The read joins the chat history,
+ * so a plain follow-up question afterwards knows which token it is about. */
+async function check(ca, quote = null) {
+  if (busy) return;
+  const e = log.querySelector(".empty");
+  if (e) e.remove();
+  addUser(`Check this token: ${ca}`, quote);
+  busy = new AbortController();
+  $("send").hidden = true;
+  $("stop").hidden = false;
+  let out = null;
+  try {
+    const f = await tokenFacts(settings, ca);
+    factCard(f);
+    out = addAssistant();
+    const r = await tokenRead(settings, f.address, "", {
+      signal: busy.signal,
+      onDelta: (_d, full) => {
+        renderMarkdown(out, full);
+        scroll();
+      },
+    });
+    history.push({ role: "user", content: `Check the Robinhood Chain token ${f.address} (${f.token.symbol ?? "?"}).` });
+    history.push({ role: "assistant", content: r.text });
+    addReceipt(r);
+    if (r.balance != null && keyInfo) {
+      keyInfo.balance = r.balance;
+      renderMeter();
+    }
+  } catch (err) {
+    if (out) out.remove();
+    if (err && err.name === "AbortError") addSys("Stopped.");
+    else addSys(err instanceof ApiError && err.code === "insufficient_credits" ? "Out of credit. Credit lands every 30 minutes while you hold 100,000 $ORBZ." : (err && err.message) || "Something went wrong.");
+  } finally {
+    busy = null;
+    $("send").hidden = false;
+    $("stop").hidden = true;
+    $("ask").focus();
+  }
 }
 
 // ── sending ─────────────────────────────────────────────────────────────────────────────────────────
@@ -190,6 +268,11 @@ async function takeTask() {
     translate: ["Translate this to English. Keep names, numbers and formatting.", "Translate to English"],
     reply: ["Draft a short, polite reply to this message. Match its tone and language.", "Draft a reply"],
   };
+  if (task.kind === "check") {
+    const ca = findAddress(task.selection);
+    if (!ca) return addSys("No contract address in that selection. Select the 0x… address itself.");
+    return check(ca);
+  }
   if (task.kind === "page") {
     if (!task.text) return addSys("This page has no readable text.");
     const note = task.truncated ? " (the page was long; this is the first part)" : "";
@@ -236,6 +319,8 @@ $("askForm").addEventListener("submit", (e) => {
   const q = $("ask").value.trim();
   if (!q) return;
   $("ask").value = "";
+  // a bare contract address is a token check
+  if (/^0x[a-fA-F0-9]{40}$/.test(q)) return check(q);
   send(q);
 });
 $("ask").addEventListener("keydown", (e) => {

@@ -7,6 +7,7 @@ const MENU = {
   summarize: { title: "Summarize this", contexts: ["selection"] },
   translate: { title: "Translate this to English", contexts: ["selection"] },
   reply: { title: "Draft a reply to this", contexts: ["selection"] },
+  check: { title: "Check this token", contexts: ["selection"] },
   page: { title: "Summarize this page", contexts: ["page"] },
 };
 

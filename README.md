@@ -4,11 +4,11 @@
 
 <br/>
 
-[![Version](https://img.shields.io/badge/version-0.1.0-FF7A1A?style=for-the-badge&labelColor=141312)](releases/)
+[![Version](https://img.shields.io/badge/version-0.2.0-FF7A1A?style=for-the-badge&labelColor=141312)](releases/)
 [![Manifest](https://img.shields.io/badge/manifest-V3-BD8E6B?style=for-the-badge&labelColor=141312)](manifest.json)
 [![Chrome](https://img.shields.io/badge/Chrome-116%2B-FBF0E3?style=for-the-badge&labelColor=141312)](#install)
 
-**[Download the zip](releases/orbz-extension-0.1.0.zip)** · [Get a key](https://use.orbz.app/keys) · [Docs](https://orbz.app/docs#chrome) · [orbz.app](https://orbz.app) · [X @OrbzRH](https://x.com/OrbzRH)
+**[Download the zip](releases/orbz-extension-0.2.0.zip)** · [Get a key](https://use.orbz.app/keys) · [Docs](https://orbz.app/docs#chrome) · [orbz.app](https://orbz.app) · [X @OrbzRH](https://x.com/OrbzRH)
 
 </div>
 
@@ -23,6 +23,7 @@
 |---|---|
 | **Ask about a selection** | Select text on any page, right-click: **Ask Orbz about this**, **Explain this**, **Summarize this**, **Translate this to English**, **Draft a reply to this** |
 | **Summarize a page** | Right-click anywhere: **Summarize this page** |
+| **Check a token** | Select a contract address, right-click: **Check this token**, or paste one into the panel. A fact card (price, liquidity, volume, pool age, owner, upgradeable, burned) from the chain and DEX Screener, then Orbz Opus's read. Follow-ups still know the token. The card is free, the read is paid like any reply |
 | **Chat** | Click the Orbz icon in the toolbar and the side panel opens |
 | **Meter** | The badge on the icon is your balance. The panel header shows which credit burns next, and when |
 
@@ -31,11 +32,13 @@ credit first, exactly like a call to the API.
 
 <p align="center"><img src="assets/panel.png" alt="The side panel explaining a selected paragraph, with the receipt under the answer" width="420" /></p>
 
+<p align="center"><img src="assets/token-check.png" alt="Check this token: a fact card for $ORBZ and Orbz Opus reading it" width="100%" /></p>
+
 ## Install
 
 <p align="center"><img src="assets/steps.png" alt="Three steps: unzip, load unpacked, connect your key" width="100%" /></p>
 
-1. **Download** [`orbz-extension-0.1.0.zip`](releases/orbz-extension-0.1.0.zip) (also on [orbz.app/docs](https://orbz.app/docs#chrome)) and unzip it somewhere you will keep it.
+1. **Download** [`orbz-extension-0.2.0.zip`](releases/orbz-extension-0.2.0.zip) (also on [orbz.app/docs](https://orbz.app/docs#chrome)) and unzip it somewhere you will keep it.
 2. **Load.** Open `chrome://extensions`, turn on **Developer mode** (top right), click **Load unpacked**, pick the folder.
 3. **Connect.** Click the Orbz icon, paste an API key from [use.orbz.app/keys](https://use.orbz.app/keys), **Connect**.
 
